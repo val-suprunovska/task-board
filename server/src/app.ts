@@ -28,7 +28,8 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-mongoose.connect(MONGODB_URI)
+mongoose
+  .connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch((error) => {
     console.error('MongoDB connection error:', error);
@@ -41,10 +42,10 @@ app.use('/api/tasks', taskRoutes);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
   });
 });
 
@@ -54,7 +55,7 @@ app.use((_req: Request, res: Response) => {
 });
 
 // Обработка ошибок
-app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((error: Error, req: Request, res: Response) => {
   console.error('Error:', error);
   res.status(500).json({ error: 'Internal server error' });
 });

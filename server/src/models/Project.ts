@@ -9,29 +9,29 @@ const projectSchema = new Schema<IProjectDocument>({
     required: [true, 'Project name is required'],
     trim: true,
     minlength: [1, 'Project name must be at least 1 character long'],
-    maxlength: [100, 'Project name cannot exceed 100 characters']
+    maxlength: [100, 'Project name cannot exceed 100 characters'],
   },
   description: {
     type: String,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+    maxlength: [500, 'Description cannot exceed 500 characters'],
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   updatedAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Автоматическое обновление updatedAt
-projectSchema.pre('save', function() {
+projectSchema.pre('save', function () {
   const doc = this as IProjectDocument;
   doc.updatedAt = new Date();
 });
 
-projectSchema.pre('findOneAndUpdate', function() {
+projectSchema.pre('findOneAndUpdate', function () {
   this.set({ updatedAt: new Date() });
 });
 
