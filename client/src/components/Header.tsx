@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, Trash2 } from 'lucide-react';
 import { useKanbanStore } from '../stores/kanban-store';
 
 interface HeaderProps {
@@ -9,11 +9,19 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
-  const { projects, searchTerm, setSearchTerm, loadProjectWithTasks, loadProjects } =
-    useKanbanStore();
+  const {
+    projects,
+    selectedProject,
+    searchTerm,
+    setSearchTerm,
+    loadProjectWithTasks,
+    loadProjects,
+    deleteProject,
+  } = useKanbanStore();
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Фильтруем проекты по поисковому запросу
   const filteredProjects = useMemo(() => {
@@ -29,6 +37,30 @@ export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
         (project.description && project.description.toLowerCase().includes(searchLower)),
     );
   }, [projects, localSearch]);
+
+  // Обработчик удаления проекта
+  const handleDeleteProject = async () => {
+    if (!selectedProject) return;
+
+    const confirmed = confirm(
+      `Are you sure you want to delete project "${selectedProject.name}"?\n\nThis action will delete ALL tasks in this project and cannot be undone.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteProject(selectedProject._id);
+      alert('Project deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert(
+        `Failed to delete project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Обработчик изменения поиска с debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,6 +181,18 @@ export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
             </div>
 
             <div className="flex items-center gap-2 w-full md:w-auto">
+              {selectedProject && (
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteProject}
+                  disabled={isDeleting}
+                  className="whitespace-nowrap"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? 'Deleting...' : 'Delete Project'}
+                </Button>
+              )}
+
               <Button onClick={onCreateProject} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
                 New Project
