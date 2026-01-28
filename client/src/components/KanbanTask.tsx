@@ -65,7 +65,9 @@ export const KanbanTask = ({ task, onEdit, onDelete }: KanbanTaskProps) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-base truncate">{task.title}</h3>
-            <Badge className={`${getStatusColor(task.status)} text-xs`}>
+            <Badge
+              className={`${getStatusColor(task.status)} text-xs transition-colors duration-200`}
+            >
               {task.status === 'todo'
                 ? 'To Do'
                 : task.status === 'inProgress'
@@ -83,32 +85,32 @@ export const KanbanTask = ({ task, onEdit, onDelete }: KanbanTaskProps) => {
               {new Date(task.createdAt).toLocaleDateString()}
             </span>
 
-            {isHovered && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-primary/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(task);
-                  }}
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-destructive/10 text-destructive hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(task._id);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
+            <div
+              className={`flex items-center gap-1 transition-opacity duration-150 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 hover:bg-primary/10 transition-colors duration-150"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(task);
+                }}
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 hover:bg-destructive/10 text-destructive hover:text-destructive transition-colors duration-150"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(task._id);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
