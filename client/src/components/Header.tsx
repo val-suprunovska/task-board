@@ -9,14 +9,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
-  const {
-    projects,
-    selectedProject,
-    searchTerm,
-    setSearchTerm,
-    loadProjectWithTasks,
-    loadProjects,
-  } = useKanbanStore();
+  const { projects, searchTerm, setSearchTerm, loadProjectWithTasks, loadProjects } =
+    useKanbanStore();
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -67,17 +61,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
       setSearchTerm(localSearch.trim());
       loadProjects(); // Загружаем проекты с учетом поиска
       setShowSearchResults(true);
-    }
-  };
-
-  // Обработчик выбора проекта из селекта
-  const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const projectId = e.target.value;
-    if (projectId) {
-      loadProjectWithTasks(projectId);
-      setLocalSearch('');
-      setSearchTerm('');
-      setShowSearchResults(false);
     }
   };
 
@@ -166,19 +149,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
             </div>
 
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={selectedProject?._id || ''}
-                onChange={handleProjectChange}
-              >
-                <option value="">Select project...</option>
-                {projects.map((project) => (
-                  <option key={project._id} value={project._id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-
               <Button onClick={onCreateProject} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
                 New Project
@@ -186,15 +156,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateProject }) => {
             </div>
           </div>
         </div>
-
-        {selectedProject && (
-          <div className="mt-4 flex items-center gap-2 text-sm">
-            <div className="px-3 py-1 bg-primary/10 text-primary rounded-full">
-              Selected: {selectedProject.name}
-            </div>
-            <div className="text-xs text-muted-foreground">ID: {selectedProject._id}</div>
-          </div>
-        )}
       </div>
     </header>
   );
