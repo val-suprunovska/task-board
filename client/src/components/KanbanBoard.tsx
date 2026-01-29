@@ -15,16 +15,62 @@ import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import { TaskModal } from './TaskModal';
 import { useKanbanStore } from '../stores/kanban-store';
+import { Button } from './ui/button';
+import { Trash2 } from 'lucide-react';
+
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  projectName: string;
+}
+
+const DeleteConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  projectName,
+}: DeleteConfirmationModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+        <h3 className="text-lg font-semibold mb-2">Delete "{projectName}"?</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          This will delete all tasks in this project. This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Delete Project
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const KanbanBoard = () => {
-  const { selectedProject, createTask, updateTask, moveTask, deleteTask, isMovingTask } =
-    useKanbanStore();
+  const {
+    selectedProject,
+    createTask,
+    updateTask,
+    moveTask,
+    deleteTask,
+    isMovingTask,
+    deleteProject,
+  } = useKanbanStore();
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<TaskStatus>('todo');
   const [isDragging, setIsDragging] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -33,6 +79,31 @@ export const KanbanBoard = () => {
       },
     }),
   );
+
+  // Обработчик удаления проекта
+  const handleDeleteProject = () => {
+    if (!selectedProject) return;
+    setIsDeleteModalOpen(true);
+  };
+
+  // Обработчик подтверждения удаления
+  const handleConfirmDelete = async () => {
+    if (!selectedProject) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteProject(selectedProject._id);
+      setIsDeleteModalOpen(false);
+      console.log('Project deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert(
+        `Failed to delete project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -218,18 +289,35 @@ export const KanbanBoard = () => {
     },
   ];
 
+  const totalTasks = columns.reduce((total, col) => total + col.count, 0);
+
   return (
     <>
       <div className="container mx-auto px-4 pt-6">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold">{selectedProject.name}</h2>
-          {selectedProject.description && (
-            <p className="text-muted-foreground mt-2">{selectedProject.description}</p>
-          )}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-3xl font-bold">{selectedProject.name}</h2>
+              {selectedProject.description && (
+                <p className="text-muted-foreground mt-2">{selectedProject.description}</p>
+              )}
+            </div>
+
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={isDeleting}
+              className="whitespace-nowrap"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isDeleting ? 'Deleting...' : 'Delete Project'}
+            </Button>
+          </div>
+
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <span>Created: {new Date(selectedProject.createdAt).toLocaleDateString()}</span>
             <span>•</span>
-            <span>Tasks: {columns.reduce((total, col) => total + col.count, 0)}</span>
+            <span>Tasks: {totalTasks}</span>
             {isMovingTask && (
               <span className="text-blue-500 flex items-center gap-1">
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
@@ -283,6 +371,13 @@ export const KanbanBoard = () => {
         onSubmit={handleSaveTask}
         task={editingTask}
         defaultStatus={selectedColumn}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        projectName={selectedProject?.name || ''}
       />
     </>
   );
